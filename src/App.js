@@ -1,33 +1,52 @@
 import React, { Component } from 'react';
 import './App.css';
+import * as storage from './utils/storage'
 
 class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      Firebase: null,
+      firebase: null,
+      database: null,
       username: '',
       message: '',
       messages: [],
+      user: {},
+      accessToken: ''
     }
   }
 
   componentDidMount() {
-    this.setState({ Firebase: new window.Firebase('https://coding-bootcamp-1d008.firebaseio.com/') })
+    var config = {
+      apiKey: 'AIzaSyB1XsfIxipARd00gi_H_lz6I7bk7kWu480',
+      authDomain: 'coding-bootcamp-1d008.firebaseapp.com',
+      databaseURL: 'https://coding-bootcamp-1d008.firebaseio.com',
+      storageBucket: 'gs://coding-bootcamp-1d008.appspot.com/',
+    };
+    const firebase = window.firebase.initializeApp(config)
+    const provider = new window.firebase.auth.GoogleAuthProvider();
+    const auth = firebase.auth()
+    auth.onAuthStateChanged((user) => { if (user) { this.setState({ user }) }});
+    this.setState({
+      database: firebase.database(),
+      firebase,
+      provider,
+      auth,
+    })
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.state.Firebase && !prevState.Firebase) {
-      this.state.Firebase.on('child_added', (snapshot) => {
+    if (this.state.database && !prevState.database) {
+      this.state.database.ref('/').on('child_added', (snapshot) => {
         const msg = snapshot.val();
-        const key = snapshot.key();
+        const key = snapshot.key;
         msg.key = key;
         this.setState({
           messages: [...this.state.messages, msg]
         })
       });
-      this.state.Firebase.on('child_removed', (snapshot) => {
-        const key = snapshot.key();
+      this.state.database.ref('/').on('child_removed', (snapshot) => {
+        const key = snapshot.key;
         this.setState({
           messages: this.state.messages.filter(message => message.key !== key)
         })
@@ -44,11 +63,37 @@ class App extends Component {
 
   submit = () => {
     const { username, message } = this.state
-    this.state.Firebase.push({ username, message });
+    this.state.database.ref('/').push({ username, message });
   }
 
   delete = key => {
-    this.state.Firebase.child(key).remove()
+    this.state.database.ref('/').child(key).remove()
+  }
+
+  login = () => {
+    const { provider, auth } = this.state
+    auth.signInWithPopup(provider).then((result) => {
+      const user = result.user;
+      const accessToken = result.credential.accessToken;
+      storage.set('accesstoken', accessToken)
+      storage.set('user', JSON.stringify(user))
+      this.setState({ user, accessToken })
+    }).catch(function(error) {
+      const code = error.code;
+      const message = error.message;
+      const email = error.email;
+      const credential = error.credential;
+      this.setState({ error: { code, message, email, credential } })
+    });
+  }
+
+  logout = () => {
+    const { auth } = this.state
+    auth.signOut().then(() => {
+      this.setState({ user: {} })
+    }).catch(function(error) {
+      alert(error)
+    });
   }
 
   renderMessages = () => {
@@ -72,13 +117,26 @@ class App extends Component {
     ))
   }
 
+  renderLogin = () => {
+    const { user } = this.state
+    if (user.displayName) {
+      return (<button id="login" onClick={this.logout}>Log Out</button>)
+    }
+    return (
+      <button id="login" onClick={this.login}>Login with Google</button>
+    )
+  }
+
   render() {
-    const { username, message } = this.state
+    const { username, message, user } = this.state
 
     return (
       <div className="App">
         <div className="App-header">
+          {this.renderLogin()}
           <h2>Welcome to Chatterbox</h2>
+          <h3>{user.displayName}</h3>
+          <input id="text" type="text" placeholder="Message" />
         </div>
         <div style={{ margin: '10px auto', textAlign: 'center' }}>
           <input
