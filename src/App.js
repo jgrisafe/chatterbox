@@ -8,7 +8,6 @@ class App extends Component {
     this.state = {
       firebase: null,
       database: null,
-      username: '',
       message: '',
       messages: [],
       user: {},
@@ -17,22 +16,7 @@ class App extends Component {
   }
 
   componentDidMount() {
-    var config = {
-      apiKey: 'AIzaSyB1XsfIxipARd00gi_H_lz6I7bk7kWu480',
-      authDomain: 'coding-bootcamp-1d008.firebaseapp.com',
-      databaseURL: 'https://coding-bootcamp-1d008.firebaseio.com',
-      storageBucket: 'gs://coding-bootcamp-1d008.appspot.com/',
-    };
-    const firebase = window.firebase.initializeApp(config)
-    const provider = new window.firebase.auth.GoogleAuthProvider();
-    const auth = firebase.auth()
-    auth.onAuthStateChanged((user) => { if (user) { this.setState({ user }) }});
-    this.setState({
-      database: firebase.database(),
-      firebase,
-      provider,
-      auth,
-    })
+    this.initFirebase()
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -54,6 +38,24 @@ class App extends Component {
     }
   }
 
+  initFirebase = () => {
+    var config = {
+      apiKey: 'AIzaSyB1XsfIxipARd00gi_H_lz6I7bk7kWu480',
+      authDomain: 'coding-bootcamp-1d008.firebaseapp.com',
+      databaseURL: 'https://coding-bootcamp-1d008.firebaseio.com',
+      storageBucket: 'gs://coding-bootcamp-1d008.appspot.com/',
+    };
+    const firebase = window.firebase.initializeApp(config)
+    const provider = new window.firebase.auth.GoogleAuthProvider();
+    const auth = firebase.auth()
+    auth.onAuthStateChanged((user) => { if (user) { this.setState({ user }) }});
+    this.setState({
+      database: firebase.database(),
+      firebase,
+      provider,
+      auth,
+    })
+  }
 
   handleChange = (e) => {
     const id = e.target.id
@@ -62,8 +64,9 @@ class App extends Component {
   }
 
   submit = () => {
-    const { username, message } = this.state
-    this.state.database.ref('/').push({ username, message });
+    const { user, message } = this.state
+    const { displayName } = user
+    this.state.database.ref('/').push({ displayName, message });
   }
 
   delete = key => {
@@ -107,7 +110,7 @@ class App extends Component {
             margin: '10px auto',
             position: 'relative'
           }}>
-        <h3>{message.username}</h3>
+        <h3>{message.displayName}</h3>
         <p>{message.message}</p>
         <div
           style={{ position: 'absolute', top: 5, left: 5, cursor: 'pointer' }}
@@ -128,7 +131,7 @@ class App extends Component {
   }
 
   render() {
-    const { username, message, user } = this.state
+    const { message, user } = this.state
 
     return (
       <div className="App">
@@ -136,25 +139,28 @@ class App extends Component {
           {this.renderLogin()}
           <h2>Welcome to Chatterbox</h2>
           <h3>{user.displayName}</h3>
-          <input id="text" type="text" placeholder="Message" />
         </div>
         <div style={{ margin: '10px auto', textAlign: 'center' }}>
-          <input
-            id="username"
-            value={username}
-            onChange={this.handleChange}
-            placeholder="Username"
-          />
-          <input
-            id="message"
-            value={message}
-            onChange={this.handleChange}
-            placeholder="Message"
-          />
-          <button
-            onClick={this.submit}
-            value="Submit!!"
-          >Submit</button>
+
+          {
+            user.displayName
+            ? (
+              <div>
+                <input
+                  id="message"
+                  value={message}
+                  onChange={this.handleChange}
+                  placeholder="Message"
+                />
+                <button
+                  onClick={this.submit}
+                  value="Submit!!"
+                >Submit</button>
+              </div>
+            )
+            : <h3>Log In To Continue</h3>
+
+          }
         </div>
         <div style={{ margin: '50px auto', textAlign: 'center' }}>
           {this.renderMessages()}
