@@ -61,7 +61,10 @@ class App extends Component {
             avatar: user.photoURL
           }
         }
+
         this.setState({ user: userObject })
+
+        // add user to firebase db
         database
           .ref(`users/${user.uid}`)
           .set(userObject)
@@ -145,9 +148,14 @@ class App extends Component {
     ))
   }
 
+  isLoggedIn = () => {
+    const { user } = this.state
+    return user.details && user.details.name
+  }
+
   renderLogin = () => {
     const { user } = this.state
-    if (user.displayName) {
+    if (this.isLoggedIn()) {
       return (<button id="login" onClick={this.logout}>Log Out</button>)
     }
     return (
@@ -163,12 +171,14 @@ class App extends Component {
         <div className="App-header">
           {this.renderLogin()}
           <h2>Welcome to Chatterbox</h2>
-          <h3>{user.displayName}</h3>
+          {
+            this.isLoggedIn() && <h3>{user.details.name}</h3>
+          }
         </div>
         <div style={{ margin: '10px auto', textAlign: 'center' }}>
 
           {
-            user.displayName
+            this.isLoggedIn()
             ? (
               <div>
                 <input
