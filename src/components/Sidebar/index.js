@@ -18,6 +18,7 @@ class index extends Component {
   startChat = (user) => {
     const { currentUser, database, setCurrentChat } = this.props
     const chatId = `${user.uid}-${currentUser.uid}`
+    const reverseChatId = `${currentUser.uid}-${user.uid}`
 
     const chat = {
       id: chatId,
@@ -26,13 +27,20 @@ class index extends Component {
         [currentUser.uid]: currentUser
       }
     }
-    const ref =  database.ref(`/chats/${chatId}`)
-    ref.once('value', (snapshot) => {
+    const ref1 =  database.ref(`/chats/${chatId}`)
+    const ref2 =  database.ref(`/chats/${reverseChatId}`)
+    ref1.once('value', (snapshot) => {
       if (snapshot.val()) {
         setCurrentChat(chatId)
       } else {
-        ref.set(chat, () => {
-          setCurrentChat(chatId)
+        ref2.once('value', (snapshot) => {
+          if (snapshot.val()) {
+            setCurrentChat(reverseChatId)
+          } else {
+            ref1.set(chat, () => {
+              setCurrentChat(chatId)
+            })
+          }
         })
       }
     })
