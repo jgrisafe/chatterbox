@@ -2,6 +2,9 @@ import React, { Component } from 'react';
 import './App.css';
 import * as storage from './utils/storage'
 
+import Sidebar from './components/Sidebar'
+import Chat from './components/Chat'
+
 class App extends Component {
   constructor(props) {
     super(props)
@@ -11,7 +14,10 @@ class App extends Component {
       database: null,
       message: '',
       messages: [],
-      user: {},
+      user: {
+        uid: "",
+        details: {}
+      },
       accessToken: ''
     }
   }
@@ -54,24 +60,15 @@ class App extends Component {
     // handles page load authentication if already logged in
     auth.onAuthStateChanged((user) => {
       if (user) {
-        console.log(user) // eslint-disable-line no-console
-        const userObject = {
-          details: {
-            name: user.displayName,
-            avatar: user.photoURL
-          }
-        }
 
-        this.setState({ user: userObject })
+        this.setState({ user: this.mapUser(user) })
 
         // add user to firebase db
+        this.getUsersFromFirebase(database)
+
         database
           .ref(`users/${user.uid}`)
-          .set(userObject)
-          .then((res) => { 
-            console.log("USER LOGGED IN!!!") // eslint-disable-line no-console
-            console.log(res)
-          }) // eslint-disable-line no-console
+          .set(this.mapUser(user))
           .catch((err) => console.log(err)) // eslint-disable-line no-console
       }
     });
@@ -84,6 +81,19 @@ class App extends Component {
       auth,
     })
   }
+
+  getUsersFromFirebase = (database) => {
+    database.ref('/users').on('value', (snapshot) => {
+      const users = snapshot.val()
+      this.setState({ users: Object.keys(users).map((userId) => ({ ...users[userId] })) })
+    })
+  }
+
+  mapUser = (user) => ({
+    uid: user.uid,
+    details: { name: user.displayName, avatar: user.photoURL }
+  })
+
 
   handleChange = (e) => {
     const id = e.target.id
@@ -177,7 +187,7 @@ class App extends Component {
   }
 
   render() {
-    const { message, user } = this.state
+    const { message, user, users } = this.state
 
     return (
       <div className="App">
@@ -186,7 +196,7 @@ class App extends Component {
           <h2>Welcome to Chatterbox</h2>
           {this.renderUser()}
         </div>
-        <div style={{ margin: '10px auto', textAlign: 'center' }}>
+        <div style={{ margin: '10px auto'}}>
 
           {
             this.isLoggedIn()
@@ -208,12 +218,22 @@ class App extends Component {
 
           }
         </div>
-        <div style={{ margin: '50px auto', textAlign: 'center' }}>
-          {this.renderMessages()}
+        <div style={mainStyle}>
+          <Sidebar users={users}/>
+          <Chat />
         </div>
       </div>
     );
   }
+}
+
+const mainStyle = {
+  padding: 10,
+  margin: '50px auto',
+  textAlign: 'center',
+  display: 'flex',
+  alignItems: 'stretch',
+  minHeight: 300
 }
 
 export default App;
