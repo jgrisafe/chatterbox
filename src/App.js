@@ -14,11 +14,9 @@ class App extends Component {
       database: null,
       message: '',
       messages: [],
-      user: {
-        uid: "",
-        details: {}
-      },
-      accessToken: ''
+      currentUser: null,
+      accessToken: '',
+      chat: null
     }
   }
 
@@ -61,7 +59,7 @@ class App extends Component {
     auth.onAuthStateChanged((user) => {
       if (user) {
 
-        this.setState({ user: this.mapUser(user) })
+        this.setState({ currentUser: this.mapUser(user) })
 
         // add user to firebase db
         this.getUsersFromFirebase(database)
@@ -159,12 +157,11 @@ class App extends Component {
   }
 
   isLoggedIn = () => {
-    const { user } = this.state
-    return user.details && user.details.name
+    const { currentUser } = this.state
+    return !!currentUser
   }
 
   renderLogin = () => {
-    const { user } = this.state
     if (this.isLoggedIn()) {
       return (<button id="login" onClick={this.logout}>Log Out</button>)
     }
@@ -174,20 +171,27 @@ class App extends Component {
   }
 
   renderUser = () => {
-    const { user } = this.state
+    const { currentUser } = this.state
     if (this.isLoggedIn()) {
       return (
         <div>
-          <h3>{user.details.name}</h3>
-          <img src={user.details.avatar} height="100" width="100" style={{ borderRadius: '50%' }}/>
+          <h3>{currentUser.details.name}</h3>
+          <img src={currentUser.details.avatar} height="100" width="100" style={{ borderRadius: '50%' }}/>
         </div>
       )
     }
     return null
   }
 
+  setCurrentChat = (chatId) => {
+    const { database } = this.state
+    database.ref(`/chats/${chatId}`).on('value', (snapshot) => {
+      this.setState({ chat: snapshot.val() })
+    })
+  }
+
   render() {
-    const { message, user, users } = this.state
+    const { message, currentUser, users, database, chat } = this.state
 
     return (
       <div className="App">
@@ -196,31 +200,18 @@ class App extends Component {
           <h2>Welcome to Chatterbox</h2>
           {this.renderUser()}
         </div>
-        <div style={{ margin: '10px auto'}}>
-
-          {
-            this.isLoggedIn()
-            ? (
-              <div>
-                <input
-                  id="message"
-                  value={message}
-                  onChange={this.handleChange}
-                  placeholder="Message"
-                />
-                <button
-                  onClick={this.submit}
-                  value="Submit!!"
-                >Submit</button>
-              </div>
-            )
-            : <h3>Log In To Continue</h3>
-
-          }
-        </div>
         <div style={mainStyle}>
-          <Sidebar users={users}/>
-          <Chat />
+          <Sidebar
+            currentUser={currentUser}
+            users={users}
+            database={database}
+            setCurrentChat={this.setCurrentChat}
+          />
+          <Chat
+            currentUser={currentUser}
+            database={database}
+            chat={chat}
+          />
         </div>
       </div>
     );

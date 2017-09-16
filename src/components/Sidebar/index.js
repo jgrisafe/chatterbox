@@ -1,20 +1,67 @@
 import React, { Component, PropTypes } from 'react';
 
+import './style.css'
+
 const style = {
   flexBasis: '20%',
   boxShadow: '0px 1px 4px #ccc',
   marginRight: 10
 }
 
+const userStyle = {
+  cursor: 'pointer',
+  padding: 5
+}
+
 class index extends Component {
 
+  startChat = (user) => {
+    const { currentUser, database, setCurrentChat } = this.props
+    const chatId = `${user.uid}-${currentUser.uid}`
+
+    const chat = {
+      id: chatId,
+      users: {
+        [user.uid]: user,
+        [currentUser.uid]: currentUser
+      }
+    }
+    const ref =  database.ref(`/chats/${chatId}`)
+    ref.once('value', (snapshot) => {
+      if (snapshot.val()) {
+        setCurrentChat(chatId)
+      } else {
+        ref.set(chat, () => {
+          setCurrentChat(chatId)
+        })
+      }
+    })
+    
+  }
+
+  renderUsers = () => {
+    const { currentUser, users } = this.props
+    const filteredUsers = users.filter((user) => user.uid !== currentUser.uid)
+    if (users) {
+      return (filteredUsers.map((user) => (
+        <div
+          className="Sidebar__user"
+          key={user.uid}
+          style={userStyle}
+          onClick={() => {this.startChat(user)}}
+        >
+          {user.details.name}
+        </div>
+      )))
+    }
+  }
+
   render() {
-    console.log(this.props.users) // eslint-disable-line no-console
     return (
       <div style={style}>
         <h2>Users</h2>
         <div className="Sidebar__user-list">
-          {this.props.users.map((user) => (<div key={user.uid}>{user.details.name}</div>))}
+          {this.renderUsers()}
         </div>
       </div>
     )
