@@ -5,6 +5,7 @@ import * as storage from './utils/storage'
 class App extends Component {
   constructor(props) {
     super(props)
+
     this.state = {
       firebase: null,
       database: null,
@@ -48,9 +49,33 @@ class App extends Component {
     const firebase = window.firebase.initializeApp(config)
     const provider = new window.firebase.auth.GoogleAuthProvider();
     const auth = firebase.auth()
-    auth.onAuthStateChanged((user) => { if (user) { this.setState({ user }) }});
+    const database = firebase.database()
+
+    // handles page load authentication if already logged in
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        console.log(user) // eslint-disable-line no-console
+        const userObject = {
+          details: {
+            name: user.displayName,
+            avatar: user.photoURL
+          }
+        }
+        this.setState({ user: userObject })
+        database
+          .ref(`users/${user.uid}`)
+          .set(userObject)
+          .then((res) => { 
+            console.log("USER LOGGED IN!!!") // eslint-disable-line no-console
+            console.log(res)
+          }) // eslint-disable-line no-console
+          .catch((err) => console.log(err)) // eslint-disable-line no-console
+      }
+    });
+
+    // initialize the state
     this.setState({
-      database: firebase.database(),
+      database,
       firebase,
       provider,
       auth,
@@ -65,8 +90,8 @@ class App extends Component {
 
   submit = () => {
     const { user, message } = this.state
-    const { displayName } = user
-    this.state.database.ref('/').push({ displayName, message });
+    const { name } = user
+    this.state.database.ref('/').push({ name, message });
   }
 
   delete = key => {
@@ -105,7 +130,7 @@ class App extends Component {
          key={message.key}
          style={{
             padding: 10,
-            boxShadow: '0px 2px 2px #ccc',
+            boxShadow: '0px 1px 4px #ccc',
             width: '50%',
             margin: '10px auto',
             position: 'relative'
