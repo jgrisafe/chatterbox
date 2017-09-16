@@ -163,6 +163,19 @@ class App extends Component {
     )
   }
 
+  renderUser = () => {
+    const { user } = this.state
+    if (this.isLoggedIn()) {
+      return (
+        <div>
+          <h3>{user.details.name}</h3>
+          <img src={user.details.avatar} height="100" width="100" style={{ borderRadius: '50%' }}/>
+        </div>
+      )
+    }
+    return null
+  }
+
   render() {
     const { message, user } = this.state
 
@@ -171,9 +184,7 @@ class App extends Component {
         <div className="App-header">
           {this.renderLogin()}
           <h2>Welcome to Chatterbox</h2>
-          {
-            this.isLoggedIn() && <h3>{user.details.name}</h3>
-          }
+          {this.renderUser()}
         </div>
         <div style={{ margin: '10px auto', textAlign: 'center' }}>
 
