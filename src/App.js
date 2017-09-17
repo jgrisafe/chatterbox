@@ -12,8 +12,6 @@ class App extends Component {
     this.state = {
       firebase: null,
       database: null,
-      message: '',
-      messages: [],
       currentUser: null,
       accessToken: '',
       chat: null
@@ -22,25 +20,6 @@ class App extends Component {
 
   componentDidMount() {
     this.initFirebase()
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.database && !prevState.database) {
-      this.state.database.ref('/').on('child_added', (snapshot) => {
-        const msg = snapshot.val();
-        const key = snapshot.key;
-        msg.key = key;
-        this.setState({
-          messages: [...this.state.messages, msg]
-        })
-      });
-      this.state.database.ref('/').on('child_removed', (snapshot) => {
-        const key = snapshot.key;
-        this.setState({
-          messages: this.state.messages.filter(message => message.key !== key)
-        })
-      });
-    }
   }
 
   initFirebase = () => {
