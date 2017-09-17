@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 
 import './style.css'
 
@@ -29,6 +30,8 @@ class index extends Component {
     }
     const ref1 =  database.ref(`/chats/${chatId}`)
     const ref2 =  database.ref(`/chats/${reverseChatId}`)
+
+    // check both combinations of uids to see if chat exists already
     ref1.once('value', (snapshot) => {
       if (snapshot.val()) {
         setCurrentChat(chatId)

@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 
 const style = {
   flexBasis: '80%',
@@ -21,18 +22,40 @@ class Chat extends Component {
     this.getUsers(nextProps)
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.messages && this.hasNewMessages(prevProps)) {
+      this.messages.scrollTop = this.messages.scrollHeight
+    }
+  }
+
+  hasNewMessages = (prevProps) => {
+    if (prevProps.chat && prevProps.chat.messages && this.props.chat.messages) {
+      return Object.keys(this.props.chat.messages).length > Object.keys(prevProps.chat.messages).length
+    }
+    return false
+  }
+
   handleChange = (e) => {
     this.setState({ message: e.target.value })
   }
 
+  handleKeyDown = (e) => {
+    if (e.key.toLowerCase() === 'enter') {
+      this.submitMessage()
+    }
+    return false
+  }
+
   submitMessage = (e) => {
     const { database, chat, currentUser } = this.props
+    if (!this.state.message.length) return;
     const messageObject = {
       name: currentUser.details.name,
       avatar: currentUser.details.avatar,
-      message: this.state.message
+      message: this.state.message,
+      uid: currentUser.uid
     }
-    database.ref(`chats/${chat.id}/messages`).push(messageObject)
+    database.ref(`chats/${chat.id}/messages`).push(messageObject).catch(err => console.log(err))
     this.setState({ message: '' })
   }
 
@@ -63,25 +86,32 @@ class Chat extends Component {
   }
 
   renderMessages = () => {
-    const { chat } = this.props
+    const { chat, currentUser } = this.props
     if (chat && chat.messages) {
       return (
-        <div style={messagesStyle}>
+        <div
+          ref={component => (this.messages = component)}
+          style={messagesStyle}
+        >
           {(Object.keys(chat.messages).map(messageKey => {
+            const message = chat.messages[messageKey]
             return (
-              <div style={messageStyle}>
+              <div key={messageKey} style={messageStyle}>
                 <div style={{ flexBasis: '10%', padding: 10 }}>
                   <img
-                    src={chat.messages[messageKey].avatar}
-                    title={chat.messages[messageKey].name}
+                    src={message.avatar}
+                    title={message.name}
                     alt="avatar"
                     style={avatarStyle} />
                 </div>
-                <div style={{display: 'flex', alignItems: 'center', flexBasis: '80%', justifyContent: 'center' }}>{chat.messages[messageKey].message}</div>
-                <div
-                  style={{ position: 'absolute', top: 5, right: 5, cursor: 'pointer' }}
-                  onClick={() => this.deleteMessage(messageKey)}
-                >X</div>
+                <div style={{display: 'flex', alignItems: 'center', flexBasis: '80%', justifyContent: 'center' }}>{message.message}</div>
+                {
+                  message.uid === currentUser.uid &&
+                  <div
+                    style={{ position: 'absolute', top: 5, right: 5, cursor: 'pointer' }}
+                    onClick={() => this.deleteMessage(messageKey)}
+                  >X</div>
+                }
               </div>
             )
           }))}
@@ -100,6 +130,7 @@ class Chat extends Component {
             id="message"
             value={message}
             onChange={this.handleChange}
+            onKeyPress={this.handleKeyDown}
             placeholder="Message"
             style={{ flexBasis: '80%', padding: 15 }}
           />
@@ -132,7 +163,8 @@ const avatarStyle = {
 
 const messagesStyle = {
   maxHeight: 500,
-  overflowY: 'auto'
+  overflowY: 'auto',
+  padding: '0 0 20px 0'
 }
 
 const messageStyle = {
@@ -143,7 +175,9 @@ const messageStyle = {
   margin: 5,
 }
 
-Chat.propTypes = {}
+Chat.propTypes = {
+  chat: PropTypes.object,
+}
 Chat.defaultProps = {}
 
 export default Chat

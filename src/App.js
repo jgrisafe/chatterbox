@@ -176,7 +176,13 @@ class App extends Component {
       return (
         <div>
           <h3>{currentUser.details.name}</h3>
-          <img src={currentUser.details.avatar} height="100" width="100" style={{ borderRadius: '50%' }}/>
+          <img
+            alt="avatar"
+            src={currentUser.details.avatar}
+            height="100"
+            width="100"
+            style={{ borderRadius: '50%' }}
+          />
         </div>
       )
     }
@@ -191,7 +197,7 @@ class App extends Component {
   }
 
   render() {
-    const { message, currentUser, users, database, chat } = this.state
+    const { currentUser, users, database, chat } = this.state
 
     return (
       <div className="App">
