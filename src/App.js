@@ -171,7 +171,8 @@ const mainStyle = {
   textAlign: 'center',
   display: 'flex',
   alignItems: 'stretch',
-  minHeight: 300
+  minHeight: 300,
+  maxWidth: 980
 }
 
 export default App;

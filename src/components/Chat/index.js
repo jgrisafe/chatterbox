@@ -72,6 +72,9 @@ class Chat extends Component {
 
   renderMessages = () => {
     const { chat, currentUser } = this.props
+    if (!chat) {
+      return (<h3>Select a user to chat with</h3>)
+    }
     if (chat && chat.messages) {
       return (
         <div
@@ -87,9 +90,14 @@ class Chat extends Component {
                     src={message.avatar}
                     title={message.name}
                     alt="avatar"
-                    style={avatarStyle} />
+                    style={avatarStyle}/>
                 </div>
-                <div style={{display: 'flex', alignItems: 'center', flexBasis: '80%', justifyContent: 'center' }}>{message.message}</div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  flexBasis: '80%',
+                  justifyContent: 'center'
+                }}>{message.message}</div>
                 {
                   message.uid === currentUser.uid &&
                   <div
@@ -103,6 +111,7 @@ class Chat extends Component {
         </div>
       )
     }
+    return (<h3>start writing...</h3>)
   }
 
   renderInput = () => {
