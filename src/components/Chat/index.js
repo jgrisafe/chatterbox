@@ -18,10 +18,6 @@ class Chat extends Component {
 
   }
 
-  componentWillReceiveProps(nextProps, nextContext) {
-    this.getUsers(nextProps)
-  }
-
   componentDidUpdate(prevProps) {
     if (this.messages && this.hasNewMessages(prevProps)) {
       this.messages.scrollTop = this.messages.scrollHeight
@@ -65,23 +61,11 @@ class Chat extends Component {
       .catch(err => alert("you can't do that"))
   }
 
-  getUsers = (nextProps) => {
-    const { chat, database, currentUser } = nextProps
-    if (chat && chat.users) {
-      const otherUser = Object.keys(chat.users).filter((uid) => {
-        return uid !== currentUser.uid
-      })
-      database.ref(`/users/${otherUser}`).once('value', (snapshot) => {
-        this.setState({ user: snapshot.val() })
-      })
-    }
-  }
-
   renderHeader = () => {
-    const { currentUser } = this.props
-    const { user } = this.state
-
-    if (currentUser && user) {
+    const { chat, currentUser } = this.props
+    if (chat && chat.users) {
+      const uid = Object.keys(chat.users).filter((uid) => uid !== currentUser.uid)
+      const user = chat.users[uid]
       return (<h1>{`Chat with ${user.details.name}`}</h1>)
     }
   }
