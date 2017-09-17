@@ -92,23 +92,6 @@ class App extends Component {
     details: { name: user.displayName, avatar: user.photoURL }
   })
 
-
-  handleChange = (e) => {
-    const id = e.target.id
-    const value = e.target.value
-    this.setState({ [id]: value })
-  }
-
-  submit = () => {
-    const { user, message } = this.state
-    const { name } = user
-    this.state.database.ref('/').push({ name, message });
-  }
-
-  delete = key => {
-    this.state.database.ref('/').child(key).remove()
-  }
-
   login = () => {
     const { provider, auth } = this.state
     auth.signInWithPopup(provider).then((result) => {
@@ -133,27 +116,6 @@ class App extends Component {
     }).catch(function(error) {
       alert(error)
     });
-  }
-
-  renderMessages = () => {
-    return this.state.messages.map((message) => (
-      <div
-         key={message.key}
-         style={{
-            padding: 10,
-            boxShadow: '0px 1px 4px #ccc',
-            width: '50%',
-            margin: '10px auto',
-            position: 'relative'
-          }}>
-        <h3>{message.displayName}</h3>
-        <p>{message.message}</p>
-        <div
-          style={{ position: 'absolute', top: 5, left: 5, cursor: 'pointer' }}
-          onClick={() => this.delete(message.key)}
-        >X</div>
-      </div>
-    ))
   }
 
   isLoggedIn = () => {

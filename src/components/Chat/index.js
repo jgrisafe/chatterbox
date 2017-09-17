@@ -62,6 +62,7 @@ class Chat extends Component {
   deleteMessage = (messageKey) => {
     const { database, chat } = this.props
     database.ref(`chats/${chat.id}/messages/${messageKey}`).remove()
+      .catch(err => alert("you can't do that"))
   }
 
   getUsers = (nextProps) => {
